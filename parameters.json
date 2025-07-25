@@ -1,0 +1,1633 @@
+{
+  "common": {
+    "description": "Parámetros comunes requeridos por sra-easy-setup.yaml para el despliegue principal",
+    "parameters": [
+      {
+        "ParameterKey": "pAWSProfile",
+        "ParameterValue": "<profile_name or leave empty if you want to use the default profile>"
+      },
+      {
+        "ParameterKey": "pAWSRegion",
+        "ParameterValue": "us-east-1"
+      }, 
+      {
+        "ParameterKey": "pControlTower",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pGovernedRegions",
+        "ParameterValue": "ct-regions"
+      },
+      {
+        "ParameterKey": "pSecurityAccountId",
+        "ParameterValue": "<security_account_id>"
+      },
+      {
+        "ParameterKey": "pLogArchiveAccountId",
+        "ParameterValue": "<log_archive_account_id>"
+      },
+      {
+        "ParameterKey": "pRepoURL",
+        "ParameterValue": "https://github.com/yol1-vlf/aws-sra.git"
+      },
+      {
+        "ParameterKey": "pRepoBranch",
+        "ParameterValue": "main"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-common-prerequisites"
+      },
+      {
+        "ParameterKey": "pSRASolutionTagKey",
+        "ParameterValue": "sra-solution"
+      },
+      {
+        "ParameterKey": "pCodeBuildProjectName",
+        "ParameterValue": "sra-codebuild-project"
+      },
+      {
+        "ParameterKey": "pCodeBuildRoleName",
+        "ParameterValue": "sra-codebuild-role"
+      },
+      {
+        "ParameterKey": "pCodeBuildProjectLambdaRoleName",
+        "ParameterValue": "sra-codebuild-project-lambda-role"
+      },
+      {
+        "ParameterKey": "pCodeBuildProjectLambdaFunctionName",
+        "ParameterValue": "sra-codebuild-project-lambda"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketNamePrefix",
+        "ParameterValue": "sra-staging"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketStackName",
+        "ParameterValue": "sra-common-prerequisites-staging-s3-bucket"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketNameSuffix",
+        "ParameterValue": "x7k9m"
+      },
+      {
+        "ParameterKey": "pCreateAWSControlTowerExecutionRole",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "o-fqgd7hni3p"
+      },
+      {
+        "ParameterKey": "cDeployAccountAlternateContactsSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployCloudTrailSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployConfigManagementSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployConfigConformancePackSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployDetectiveSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployEC2DefaultEBSEncryptionSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployFirewallManagerSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployGuardDutySolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployIAMAccessAnalyzerSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployIAMPasswordPolicySolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployMacieSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployS3BlockAccountPublicAccessSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeploySecurityHubSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployInspectorSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployConfigSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployShieldSolution",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "cDeployPatchMgrSolution",
+        "ParameterValue": "No"
+      }
+    ]
+  },
+  "rAccountAlternateContactsSolutionStack": {
+    "description": "Parámetros para la solución Account Alternate Contacts",
+    "deploy_condition": "pDeployAccountAlternateContactsSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pExcludeAlternateContactAccountTags",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pBillingContactAction",
+        "ParameterValue": "add"
+      },
+      {
+        "ParameterKey": "pBillingEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pBillingName",
+        "ParameterValue": "\"<name> (billing)\""
+      },
+      {
+        "ParameterKey": "pBillingPhone",
+        "ParameterValue": "<phone_number>"
+      },
+      {
+        "ParameterKey": "pBillingTitle",
+        "ParameterValue": "\"SRA Billing\""
+      },
+      {
+        "ParameterKey": "pOperationsContactAction",
+        "ParameterValue": "add"
+      },
+      {
+        "ParameterKey": "pOperationsEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pOperationsName",
+        "ParameterValue": "\"<name> (operations)\""
+      },
+      {
+        "ParameterKey": "pOperationsPhone",
+        "ParameterValue": "<phone_number>"
+      },
+      {
+        "ParameterKey": "pOperationsTitle",
+        "ParameterValue": "\"SRA Operations\""
+      },
+      {
+        "ParameterKey": "pSecurityContactAction",
+        "ParameterValue": "add"
+      },
+      {
+        "ParameterKey": "pSecurityEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSecurityName",
+        "ParameterValue": "\"<name> (security)\""
+      },
+      {
+        "ParameterKey": "pSecurityPhone",
+        "ParameterValue": "<phone_number>"
+      },
+      {
+        "ParameterKey": "pSecurityTitle",
+        "ParameterValue": "\"SRA Security\""
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pManagementAccountId",
+        "ParameterValue": "/sra/control-tower/management-account-id"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-account-alternate-contacts"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.1"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rCloudTrailSolutionStack": {
+    "description": "Parámetros para la solución CloudTrail",
+    "deploy_condition": "pDeployCloudTrailSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pCloudTrailName",
+        "ParameterValue": "sra-org-trail"
+      },
+      {
+        "ParameterKey": "pEnableDataEventsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableLambdaDataEvents",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableS3DataEvents",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pBucketNamePrefix",
+        "ParameterValue": "sra-org-trail-logs"
+      },
+      {
+        "ParameterKey": "pCloudTrailLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pCloudTrailLogGroupRetention",
+        "ParameterValue": "400"
+      },
+      {
+        "ParameterKey": "pCreateCloudTrailLogGroup",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pOrganizationCloudTrailKeyAlias",
+        "ParameterValue": "sra-cloudtrail-kms-alias-key"
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pLogArchiveAccountId",
+        "ParameterValue": "/sra/control-tower/log-archive-account-id"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-cloudtrail-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.2"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rConfigManagementSolutionStack": {
+    "description": "Parámetros para la solución Config Management",
+    "deploy_condition": "pDeployConfigManagementSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pAllSupported",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pFrequency",
+        "ParameterValue": "1hour"
+      },
+      {
+        "ParameterKey": "pIncludeGlobalResourceTypes",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pKmsKeyArn",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pResourceTypes",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pConfigRegionsToEnable",
+        "ParameterValue": "/sra/regions/customer-control-tower-regions"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pLogArchiveAccountId",
+        "ParameterValue": "/sra/control-tower/log-archive-account-id"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pHomeRegion",
+        "ParameterValue": "/sra/control-tower/home-region"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-config-management-account"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.2"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rConfigConformancePackSolutionStack": {
+    "description": "Parámetros para la solución Config Conformance Pack",
+    "deploy_condition": "pDeployConfigConformancePackSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pConformancePackName",
+        "ParameterValue": "sra-operational-best-practices-for-encryption-and-keys"
+      },
+      {
+        "ParameterKey": "pConformancePackTemplateName",
+        "ParameterValue": "Operational-Best-Practices-for-Encryption-and-Keys.yaml"
+      },
+      {
+        "ParameterKey": "pDeliveryS3KeyPrefix",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketNameSuffix",
+        "ParameterValue": "x7k9m"
+      },
+      {
+        "ParameterKey": "pExcludedAccounts",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pLogArchiveAccountId",
+        "ParameterValue": "/sra/control-tower/log-archive-account-id"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRegionsToDeployConformancePacks",
+        "ParameterValue": "/sra/regions/customer-control-tower-regions"
+      },
+      {
+        "ParameterKey": "pRegisterDelegatedAdminAccount",
+        "ParameterValue": "Yes"
+      },
+      {
+        "ParameterKey": "pSourceStackName",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-config-conformance-pack-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.2"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rDetectiveSolutionStack": {
+    "description": "Parámetros para la solución Detective",
+    "deploy_condition": "pDeployDetectiveSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pDatasourcePackages",
+        "ParameterValue": "ASFF_SECURITYHUB_FINDING, EKS_AUDIT"
+      },
+      {
+        "ParameterKey": "pGuarddutyEnabledForMoreThan48Hours",
+        "ParameterValue": "false"
+      }
+    ]
+  },
+  "rEC2DefaultEBSEncryptionSolutionStack": {
+    "description": "Parámetros para la solución EC2 Default EBS Encryption",
+    "deploy_condition": "pDeployEC2DefaultEBSEncryptionSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pExcludeEC2DefaultEBSEncryptionTags",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pControlTowerRegionsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-ec2-default-ebs-encryption"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.3"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rFirewallManagerSolutionStack": {
+    "description": "Parámetros para la solución Firewall Manager",
+    "deploy_condition": "pDeployFirewallManagerSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pEnableRemediation",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pInternalNetCIDR",
+        "ParameterValue": "172.31.0.0/16"
+      },
+      {
+        "ParameterKey": "pCreateVpcForSG",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pVPCCidrBlock",
+        "ParameterValue": "10.0.0.0/28"
+      },
+      {
+        "ParameterKey": "pVpcId",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pDelegatedAdminAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-firewall-manager-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.4"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rGuardDutySolutionStack": {
+    "description": "Parámetros para la solución GuardDuty",
+    "deploy_condition": "pDeployGuardDutySolution",
+    "parameters": [
+      {
+        "ParameterKey": "pDisableGuardDuty",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pGuardDutyCustomerGovernedRegionsOnly",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pGuardDutyEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pGuardDutyFindingPublishingFrequency",
+        "ParameterValue": "FIFTEEN_MINUTES"
+      },
+      {
+        "ParameterKey": "pGuardDutyOrgDeliveryBucketPrefix",
+        "ParameterValue": "sra-guardduty-org-delivery"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketNameSuffix",
+        "ParameterValue": "x7k9l"
+      },
+      {
+        "ParameterKey": "pGuardDutyOrgDeliveryKeyAlias",
+        "ParameterValue": "sra-guardduty-kms-key-alias"
+      },
+      {
+        "ParameterKey": "pAutoEnableS3Logs",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pAutoEnableKubernetesAuditLogs",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pAutoEnableMalwareProtection",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableRdsLoginEvents",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableRuntimeMonitoring",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableEksAddonManagement",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableEcsFargateAgentManagement",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableEc2AgentManagement",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableLambdaNetworkLogs",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pLogArchiveAccountId",
+        "ParameterValue": "/sra/control-tower/log-archive-account-id"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pControlTowerRegionsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pFindingPublishingFrequency",
+        "ParameterValue": "FIFTEEN_MINUTES"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "DEBUG"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-guardduty-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.2"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rIAMAccessAnalyzerSolutionStack": {
+    "description": "Parámetros para la solución IAM Access Analyzer",
+    "deploy_condition": "pDeployIAMAccessAnalyzerSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pAccessAnalyzerNamePrefix",
+        "ParameterValue": "sra-account-access-analyzer"
+      },
+      {
+        "ParameterKey": "pOrganizationAccessAnalyzerName",
+        "ParameterValue": "sra-organization-access-analyzer"
+      },
+      {
+        "ParameterKey": "pAccessAnalyzerRegisterDelegatedAdminAccount",
+        "ParameterValue": "Yes"
+      }
+    ]
+  },
+  "rIAMPasswordPolicySolutionStack": {
+    "description": "Parámetros para la solución IAM Password Policy",
+    "deploy_condition": "pDeployIAMPasswordPolicySolution",
+    "parameters": [
+      {
+        "ParameterKey": "pAllowUsersToChangePassword",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pHardExpiry",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pMaxPasswordAge",
+        "ParameterValue": "90"
+      },
+      {
+        "ParameterKey": "pMinimumPasswordLength",
+        "ParameterValue": "16"
+      },
+      {
+        "ParameterKey": "pPasswordReusePrevention",
+        "ParameterValue": "24"
+      },
+      {
+        "ParameterKey": "pRequireLowercaseCharacters",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pRequireNumbers",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pRequireSymbols",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pRequireUppercaseCharacters",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-iam-password-policy"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.2"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      }
+    ]
+  },
+  "rMacieSolutionStack": {
+    "description": "Parámetros para la solución Macie",
+    "deploy_condition": "pDeployMacieSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pDisableMacie",
+        "ParameterValue": "No"
+      },
+      {
+        "ParameterKey": "pMacieFindingPublishingFrequency",
+        "ParameterValue": "FIFTEEN_MINUTES"
+      },
+      {
+        "ParameterKey": "pMacieOrgDeliveryBucketPrefix",
+        "ParameterValue": "sra-macie-org-delivery"
+      },
+      {
+        "ParameterKey": "pMacieOrgDeliveryKeyAlias",
+        "ParameterValue": "sra-macie-org-delivery-key"
+      }
+    ]
+  },
+  "rS3BlockAccountPublicAccessSolutionStack": {
+    "description": "Parámetros para la solución S3 Block Account Public Access",
+    "deploy_condition": "pDeployS3BlockAccountPublicAccessSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pExcludeS3BlockAccountPublicAccessTags",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pEnableBlockPublicAcls",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableBlockPublicPolicy",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableIgnorePublicAcls",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableRestrictPublicBuckets",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-s3-block-account-public-access"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.3"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rSecurityHubSolutionStack": {
+    "description": "Parámetros para la solución Security Hub",
+    "deploy_condition": "pDeploySecurityHubSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pDisableSecurityHub",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pEnableCISStandard",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pCISStandardVersion",
+        "ParameterValue": "1.4.0"
+      },
+      {
+        "ParameterKey": "pEnablePCIStandard",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pEnableSecurityBestPracticesStandard",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pEnableNISTStandard",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pNISTStandardVersion",
+        "ParameterValue": "5.0.0"
+      },
+      {
+        "ParameterKey": "pRegionLinkingMode",
+        "ParameterValue": "SPECIFIED_REGIONS"
+      },
+      {
+        "ParameterKey": "pSecurityHubConfigurationRoleName",
+        "ParameterValue": "sra-securityhub-configuration-role"
+      },
+      {
+        "ParameterKey": "pSecurityHubOrgLambdaFunctionName",
+        "ParameterValue": "sra-securityhub-org-lambda"
+      },
+      {
+        "ParameterKey": "pSecurityHubOrgLambdaRoleName",
+        "ParameterValue": "sra-securityhub-org-lambda-role"
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pControlTowerRegionsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pSourceStackName",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-securityhub-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.5"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rShieldSolutionStack": {
+    "description": "Parámetros para la solución Shield Advanced",
+    "deploy_condition": "pDeployShieldSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pConfigureDRTTeamAccess",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pResourcesToProtect",
+        "ParameterValue": "arn:aws:cloudfront::111111111111:distribution/ABCDEFGHIJKLMN"
+      },
+      {
+        "ParameterKey": "pShieldAccountsToProtect",
+        "ParameterValue": "111111111111"
+      },
+      {
+        "ParameterKey": "pShieldAutoRenew",
+        "ParameterValue": "ENABLED"
+      },
+      {
+        "ParameterKey": "pShieldDRTLogBuckets",
+        "ParameterValue": "samplebucket1"
+      },
+      {
+        "ParameterKey": "pShieldDRTRoleName",
+        "ParameterValue": "DRT-Access-Role"
+      },
+      {
+        "ParameterKey": "pShieldEnableProactiveEngagement",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pShieldProactiveEngagementEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pShieldProactiveEngagementNotes",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pShieldProactiveEngagementPhoneNumber",
+        "ParameterValue": "+56982302316"
+      },
+      {
+        "ParameterKey": "pShieldWarning",
+        "ParameterValue": "Reject"
+      },
+      {
+        "ParameterKey": "pProtectionGroup0AccountId",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup0Aggregation",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup0Id",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup0Members",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup0Pattern",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup0ResourceType",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup1AccountId",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup1Aggregation",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup1Id",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup1Members",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup1Pattern",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup1ResourceType",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup2AccountId",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup2Aggregation",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup2Id",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup2Members",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup2Pattern",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup2ResourceType",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup3AccountId",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup3Aggregation",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup3Id",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup3Members",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup3Pattern",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup3ResourceType",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup4AccountId",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup4Aggregation",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup4Id",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup4Members",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup4Pattern",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pProtectionGroup4ResourceType",
+        "ParameterValue": ""
+      }
+    ]
+  },
+  "rInspectorSolutionStack": {
+    "description": "Parámetros para la solución Inspector",
+    "deploy_condition": "pDeployInspectorSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pScanComponents",
+        "ParameterValue": "\"EC2, ECR, LAMBDA, LAMBDA_CODE\""
+      },
+      {
+        "ParameterKey": "pEcrRescanDuration",
+        "ParameterValue": "LIFETIME"
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pControlTowerLifeCycleRuleName",
+        "ParameterValue": "sra-inspector-org-trigger"
+      },
+      {
+        "ParameterKey": "pControlTowerRegionsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-inspector-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.0"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      }
+    ]
+  },
+  "rPatchMgrSolutionStack": {
+    "description": "Parámetros para la solución Patch Manager",
+    "deploy_condition": "pDeployPatchMgrSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pDisablePatchMgmt",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTaskOperation",
+        "ParameterValue": "Scan"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTaskRebootOption",
+        "ParameterValue": "RebootIfNeeded"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindowTZ",
+        "ParameterValue": "America/New_York"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow1Schedule",
+        "ParameterValue": "cron(0 0 1 ? * THU *)"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow1Duration",
+        "ParameterValue": "6"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow1Cutoff",
+        "ParameterValue": "1"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTask1RunCmd",
+        "ParameterValue": "AWS-UpdateSSMAgent"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTarget1Value1",
+        "ParameterValue": "Linux"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTarget1Value2",
+        "ParameterValue": "Windows"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow2Schedule",
+        "ParameterValue": "cron(0 0 1 ? * WED *)"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow2Duration",
+        "ParameterValue": "6"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow2Cutoff",
+        "ParameterValue": "1"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTask2RunCmd",
+        "ParameterValue": "AWS-RunPatchBaseline"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTarget2Value1",
+        "ParameterValue": "Windows"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow3Schedule",
+        "ParameterValue": "cron(0 0 1 ? * FRI *)"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow3Duration",
+        "ParameterValue": "6"
+      },
+      {
+        "ParameterKey": "pPatchMgmtMaintWindow3Cutoff",
+        "ParameterValue": "1"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTask3RunCmd",
+        "ParameterValue": "AWS-RunPatchBaseline"
+      },
+      {
+        "ParameterKey": "pPatchMgmtTarget3Value1",
+        "ParameterValue": "Linux"
+      }
+    ]
+  },
+  "rConfigSolutionStack": {
+    "description": "Parámetros para la solución Config (incompatible con Control Tower)",
+    "deploy_condition": "pDeployConfigSolution",
+    "parameters": [
+      {
+        "ParameterKey": "pCommonPrerequisitesRegionsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pConfigEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pRecorderName",
+        "ParameterValue": "sra-ConfigRecorder"
+      },
+      {
+        "ParameterKey": "pConfigOrgDeliveryBucketPrefix",
+        "ParameterValue": "sra-config-org-delivery"
+      },
+      {
+        "ParameterKey": "pConfigOrgDeliveryKeyAlias",
+        "ParameterValue": "sra-config-org-delivery-key"
+      },
+      {
+        "ParameterKey": "pConfigOrgSnsKeyAlias",
+        "ParameterValue": "sra-config-org-sns-key"
+      },
+      {
+        "ParameterKey": "pConfigTopicName",
+        "ParameterValue": "sra-ConfigNotifications"
+      },
+      {
+        "ParameterKey": "pConfigurationEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pDeliveryChannelName",
+        "ParameterValue": "sra-config-s3-delivery"
+      },
+      {
+        "ParameterKey": "pSubscribeToConfigurationTopic",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pAggregatorName",
+        "ParameterValue": "sra-config-aggregator-org"
+      },
+      {
+        "ParameterKey": "pAggregatorRoleName",
+        "ParameterValue": "sra-config-aggregator-org"
+      },
+      {
+        "ParameterKey": "pRegisterDelegatedAdminAccount",
+        "ParameterValue": "Yes"
+      },
+      {
+        "ParameterKey": "pKMSKeyArnSecretName",
+        "ParameterValue": "sra/config_org_delivery_key_arn"
+      },
+      {
+        "ParameterKey": "pComplianceFrequency",
+        "ParameterValue": "7"
+      },
+      {
+        "ParameterKey": "pControlTowerLifeCycleRuleName",
+        "ParameterValue": "sra-config-org-trigger"
+      },
+      {
+        "ParameterKey": "pDeliveryS3KeyPrefix",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": "<email address>"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": "<kms_key_arn>"
+      },
+      {
+        "ParameterKey": "pEnabledRegions",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+      },
+      {
+        "ParameterKey": "pControlTowerRegionsOnly",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pRootOrganizationalUnitId",
+        "ParameterValue": "/sra/control-tower/root-organizational-unit-id"
+      },
+      {
+        "ParameterKey": "pStackSetAdminRole",
+        "ParameterValue": "sra-stackset"
+      },
+      {
+        "ParameterKey": "pStackExecutionRole",
+        "ParameterValue": "sra-execution"
+      },
+      {
+        "ParameterKey": "pAllSupported",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pAuditAccountId",
+        "ParameterValue": "/sra/control-tower/audit-account-id"
+      },
+      {
+        "ParameterKey": "pFrequency",
+        "ParameterValue": "1hour"
+      },
+      {
+        "ParameterKey": "pHomeRegion",
+        "ParameterValue": "/sra/control-tower/home-region"
+      },
+      {
+        "ParameterKey": "pIncludeGlobalResourceTypes",
+        "ParameterValue": "true"
+      },
+      {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+      },
+      {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+      },
+      {
+        "ParameterKey": "pLogArchiveAccountId",
+        "ParameterValue": "/sra/control-tower/log-archive-account-id"
+      },
+      {
+        "ParameterKey": "pOrganizationId",
+        "ParameterValue": "/sra/control-tower/organization-id"
+      },
+      {
+        "ParameterKey": "pResourceTypes",
+        "ParameterValue": ""
+      },
+      {
+        "ParameterKey": "pSRASolutionName",
+        "ParameterValue": "sra-config-org"
+      },
+      {
+        "ParameterKey": "pSRASolutionVersion",
+        "ParameterValue": "v1.0"
+      },
+      {
+        "ParameterKey": "pSRAStagingS3BucketName",
+        "ParameterValue": "/sra/staging-s3-bucket-name"
+      },
+      {
+        "ParameterKey": "pCustomerControlTowerRegions",
+        "ParameterValue": "/sra/regions/customer-control-tower-regions"
+      }
+    ]
+  }
+}

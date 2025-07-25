@@ -1,0 +1,386 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Control Tower Batch Account Creation - 'batch_account_creation' solution in the repo, https://github.com/aws-samples/aws-security-reference-architecture-examples
+
+Metadata:
+  SRA:
+    Version: 1.2
+    Entry: Parameters for deploying solution resolving SSM parameters
+    Order: 1
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+          - pSRASolutionVersion
+          - pSRAStagingS3BucketName
+          - pS3KeyName
+
+      - Label:
+          default: IAM Properties
+        Parameters:
+          - pStackSetAdminRole
+          - pStackExecutionRole
+
+      - Label:
+          default: DynamoDB Properties
+        Parameters:
+          - pDynamoDBReadCapacityUnits
+          - pDynamoDBWriteCapacityUnits
+
+      - Label:
+          default: Lambda Function Properties
+        Parameters:
+          - pNewAccountHandlerTimeout
+          - pCreateManagedAccountTimeout
+          - pCreateManagedAccountMemorySize
+
+    ParameterLabels:
+      pStackSetAdminRole:
+        default: Stack Set Role
+      pStackExecutionRole:
+        default: Stack execution role
+      pSRAStagingS3BucketName:
+        default: S3 Bucket Name
+      pS3KeyName:
+        default: S3 Key Name
+      pDynamoDBReadCapacityUnits:
+        default: DynamoDB Read Capacity Units
+      pDynamoDBWriteCapacityUnits:
+        default: DynamoDB Write Capacity Units
+      pNewAccountHandlerTimeout:
+        default: New Account Handler Lambda Timeout
+      pCreateManagedAccountTimeout:
+        default: Create Managed Account Lambda Timeout
+      pCreateManagedAccountMemorySize:
+        default: Create Managed Account Lambda Memory Size
+      pSRASolutionName:
+        default: SRA Solution Name
+      pSRASolutionVersion:
+        default: SRA Solution Version
+      pSRAStagingS3BucketName:
+        default: SRA Staging S3 Bucket Name
+
+Parameters:
+  pStackSetAdminRole:
+    AllowedValues: [sra-stackset]
+    Default: sra-stackset
+    Description: The administration role name that is used in the stackset.
+    Type: String
+  pStackExecutionRole:
+    AllowedValues: [sra-execution]
+    Default: sra-execution
+    Description: The execution role name that is used in the stack.
+    Type: String
+  pS3KeyName:
+    AllowedValues: [accounts/accounts.csv]
+    Default: accounts/accounts.csv
+    Description: File name of the CSV file containing the account creation data.
+    Type: String
+  pDynamoDBReadCapacityUnits:
+    AllowedValues: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    Default: 10
+    Description: DynamoDB table read capacity units
+    Type: Number
+  pDynamoDBWriteCapacityUnits:
+    AllowedValues: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    Default: 10
+    Description: DynamoDB table write capacity units
+    Type: Number
+  pNewAccountHandlerTimeout:
+    AllowedValues: [60, 120, 180, 300, 600, 900]
+    Default: 900
+    Description: New Account Handler Lambda function timeout in seconds
+    Type: Number
+  pCreateManagedAccountTimeout:
+    AllowedValues: [60, 120, 180, 300]
+    Default: 300
+    Description: Create Managed Account Lambda function timeout in seconds
+    Type: Number
+  pCreateManagedAccountMemorySize:
+    AllowedValues: [128, 256, 512, 1024, 2048, 4096]
+    Default: 128
+    Description: Create Managed Account Lambda function memory size in MB
+    Type: Number
+  pSRASolutionName:
+    AllowedValues: [sra-batch-account-creation]
+    Default: sra-batch-account-creation
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+  pSRASolutionVersion:
+    AllowedValues: [v1.2]
+    Default: v1.2
+    Description: The SRA solution version. Used to trigger updates on the nested StackSets.
+    Type: String
+  pSRAStagingS3BucketName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+    Default: /sra/staging-s3-bucket-name
+    Description:
+      SSM Parameter for SRA Staging S3 bucket name for the artifacts relevant to solution. (e.g., lambda zips, CloudFormation templates) S3 bucket
+      name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  rNewAccountDetailsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: AccountName
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: AccountName
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: !Ref pDynamoDBReadCapacityUnits
+        WriteCapacityUnits: !Ref pDynamoDBWriteCapacityUnits
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  rNewAccountHandlerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      RoleName: !Sub '${pSRASolutionName}-NewAccountHandlerLambdaExecutionRole'
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: S3ReadAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: '1'
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectAcl
+                Effect: Allow
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::${pSRAStagingS3BucketName}/${pSRASolutionName}
+                  - !Sub arn:${AWS::Partition}:s3:::${pSRAStagingS3BucketName}/${pSRASolutionName}/${pS3KeyName}
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+
+  rNewAccountHandlerPolicy:
+    Type: AWS::IAM::Policy
+    DeletionPolicy: Delete
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - dynamodb:Query
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:scan
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - rNewAccountDetailsTable
+                  - Arn
+              - Ref: AWS::NoValue
+          - Action:
+              - organizations:ListAccountsForParent
+              - organizations:ListRoots
+              - organizations:ListAccountsForParent
+              - organizations:ListOrganizationalUnitsForParent
+              - organizations:ListChildren
+              - organizations:DescribeOrganizationalUnit
+            Effect: Allow
+            Resource: '*'
+        Version: "2012-10-17"
+      PolicyName: NewAccountHandlerPolicy
+      Roles:
+        - Ref: rNewAccountHandlerLambdaExecutionRole
+
+  rNewAccountHandlerLambda:
+    Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: !Sub '${pSRASolutionName}-NewAccountHandlerLambda'
+      Code:
+        S3Bucket: !Ref pSRAStagingS3BucketName
+        S3Key: !Sub '${pSRASolutionName}/lambda_code/ct_batchcreation_lambda.zip'
+      Handler: new_account_handler.account_handler
+      Role: !GetAtt rNewAccountHandlerLambdaExecutionRole.Arn
+      Runtime: python3.12
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: rNewAccountDetailsTable
+          BATCH_BUCKET_NAME:
+            Ref: pSRAStagingS3BucketName
+          BATCH_KEY_NAME:
+            !Sub '${pSRASolutionName}/${pS3KeyName}'
+      Timeout: !Ref pNewAccountHandlerTimeout
+    DependsOn:
+      - rNewAccountHandlerPolicy
+
+  rNewAccountHandlerTriggerLambda:
+    Type: 'Custom::AccountHandler'
+    Properties:
+      ServiceToken: !GetAtt "rNewAccountHandlerLambda.Arn"
+
+  rCreateManagedAccountLambda:
+    Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: !Sub '${pSRASolutionName}-CreateManagedAccountLambda'
+      Code:
+        S3Bucket: !Ref pSRAStagingS3BucketName
+        S3Key: !Sub '${pSRASolutionName}/lambda_code/ct_account_create_lambda.zip'
+      Handler: account_create.lambda_handler
+      MemorySize: !Ref pCreateManagedAccountMemorySize
+      Role: !GetAtt "rCreateManagedAccountLambdaRole.Arn"
+      Runtime: python3.12
+      Timeout: !Ref pCreateManagedAccountTimeout
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: rNewAccountDetailsTable
+          PRINCIPAL_ARN:
+            !GetAtt "rCreateManagedAccountLambdaRole.Arn"
+
+  rTargetLambdaTrigger:
+    Type: 'Custom::CreateAccount'
+    DependsOn:
+      - rEventSourceMapping
+    Properties:
+      ServiceToken: !GetAtt "rCreateManagedAccountLambda.Arn"
+
+  rPermissionForEventsToInvokeLambdachk:
+    Type: AWS::Lambda::Permission
+    DeletionPolicy: Delete
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt "rCreateManagedAccountLambda.Arn"
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt "rCaptureControlTowerLifeCycleEvents.Arn"
+
+  rCreateManagedAccountLambdaRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      RoleName: !Sub '${pSRASolutionName}-CreateManagedAccountLambdaRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition: {}
+      Path: /
+      Policies:
+        - PolicyName: ct-admin-inline-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sso:GetProfile'
+                  - 'sso:CreateProfile'
+                  - 'sso:UpdateProfile'
+                  - 'sso:AssociateProfile'
+                  - 'sso:CreateApplicationInstance'
+                  - 'sso:GetSSOStatus'
+                  - 'sso:GetTrust'
+                  - 'sso:CreateTrust'
+                  - 'sso:UpdateTrust'
+                  - 'sso:GetPeregrineStatus'
+                  - 'sso:GetApplicationInstance'
+                  - 'sso:ListDirectoryAssociations'
+                  - 'sso:ListPermissionSets'
+                  - 'sso:GetPermissionSet'
+                  - 'sso:ProvisionApplicationInstanceForAWSAccount'
+                  - 'sso:ProvisionApplicationProfileForAWSAccountInstance'
+                  - 'sso:ProvisionSAMLProvider'
+                  - 'sso:ListProfileAssociations'
+                  - 'sso-directory:ListMembersInGroup'
+                  - 'sso-directory:SearchGroups'
+                  - 'sso-directory:SearchGroupsWithGroupName'
+                  - 'sso-directory:SearchUsers'
+                  - 'sso-directory:CreateUser'
+                  - 'sso-directory:DescribeGroups'
+                  - 'sso-directory:DescribeDirectory'
+                  - 'sso-directory:GetUserPoolInfo'
+                  - 'controltower:CreateManagedAccount'
+                  - 'controltower:DescribeManagedAccount'
+                  - 'controltower:DeregisterManagedAccount'
+                  - 's3:GetObject'
+                  - 'organizations:describeOrganization'
+                  - 'sso:DescribeRegisteredRegions'
+                  - 'servicecatalog:DisassociatePrincipalFromPortfolio'
+                  - 'servicecatalog:AssociatePrincipalWithPortfolio'
+                Resource:  '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AWSOrganizationsFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws:iam::aws:policy/AWSServiceCatalogAdminReadOnlyAccess
+        - arn:aws:iam::aws:policy/AWSServiceCatalogEndUserFullAccess
+
+  rCaptureControlTowerLifeCycleEvents:
+    Type: AWS::Events::Rule
+    DeletionPolicy: Delete
+    Properties:
+      Description: Capture Control Tower LifeCycle Events and Trigger an Action
+      EventPattern:
+        detail:
+          eventName:
+          - CreateManagedAccount
+          eventSource:
+          - controltower.amazonaws.com
+        detail-type:
+        - AWS Service Event via CloudTrail
+        source:
+        - aws.controltower
+      State: ENABLED
+      Targets:
+      - Arn: !GetAtt "rCreateManagedAccountLambda.Arn"
+        Id: IDCaptureControlTowerLifeCycleEvents
+
+  rEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    DeletionPolicy: Delete
+    DependsOn: 
+      - rNewAccountHandlerTriggerLambda
+    Properties:
+      EventSourceArn: !GetAtt
+        - rNewAccountDetailsTable
+        - StreamArn
+      FunctionName: !GetAtt
+        - rCreateManagedAccountLambda
+        - Arn
+      StartingPosition: LATEST
+
+Outputs:
+  oDynamoDBTableWithAccountInformation:
+    Description: The DynamoDB table name
+    Value: !Sub 'https://console.aws.amazon.com/dynamodb/home?region=${AWS::Region}#tables:selected=${rNewAccountDetailsTable}'
+    Export:
+      Name: eDynamoDBTableWithAccountInformation
+  oNewAccountHandlerLambda:
+    Description: Lambda to validate the input file and load the data in to DynamoDB table
+    Value: !Sub 'https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${rNewAccountHandlerLambda}'
+    Export:
+      Name: eNewAccountHandlerLambda
+  oCreateManagedAccountLambda:
+    Description: Lambda to create account from the DynamoDB table
+    Value: !Sub 'https://console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${rCreateManagedAccountLambda}'
+    Export:
+      Name: eCreateManagedAccountLambda
