@@ -1,0 +1,47 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates an account IAM Access Analyzer - 'iam_access_analyzer' solution in the repo,
+  https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse52)
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+      - Label:
+          default: IAM Access Analyzer Attributes
+        Parameters:
+          - pAccessAnalyzerNamePrefix
+
+    ParameterLabels:
+      pAccessAnalyzerNamePrefix:
+        default: Access Analyzer Name Prefix
+      pSRASolutionName:
+        default: SRA Solution Name
+
+Parameters:
+  pAccessAnalyzerNamePrefix:
+    Default: sra-account-access-analyzer
+    Description: Access Analyzer Name Prefix. The Account ID will be appended to the name.
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-iam-access-analyzer]
+    Default: sra-iam-access-analyzer
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+
+Resources:
+  rAccountAccessAnalyzer:
+    Type: AWS::AccessAnalyzer::Analyzer
+    Properties:
+      AnalyzerName: !Sub ${pAccessAnalyzerNamePrefix}-${AWS::AccountId}
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+      Type: ACCOUNT

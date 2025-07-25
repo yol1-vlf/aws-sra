@@ -1,0 +1,130 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates an IAM role to configure Macie within the delegated administrator account - 'macie_org' solution in the repo,
+  https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse5m)
+
+Metadata:
+  SRA:
+    Version: 1.1
+    Order: 3
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+      - Label:
+          default: Role Properties
+        Parameters:
+          - pMacieOrgConfigurationRoleName
+          - pManagementAccountId
+          - pMacieOrgLambdaRoleName
+
+    ParameterLabels:
+      pMacieOrgConfigurationRoleName:
+        default: Configuration IAM Role Name
+      pMacieOrgLambdaRoleName:
+        default: Lambda Role Name
+      pManagementAccountId:
+        default: Organization Management Account ID
+      pSRASolutionName:
+        default: SRA Solution Name
+
+Parameters:
+  pMacieOrgConfigurationRoleName:
+    AllowedPattern: '^[\w+=,.@-]{1,64}$'
+    ConstraintDescription: Max 64 alphanumeric characters. Also special characters supported [+, =, ., @, -]
+    Default: sra-macie-org-configuration
+    Description: Configuration IAM Role Name
+    Type: String
+  pMacieOrgLambdaRoleName:
+    AllowedPattern: '^[\w+=,.@-]{1,64}$'
+    ConstraintDescription: Max 64 alphanumeric characters. Also special characters supported [+, =, ., @, -]
+    Default: sra-macie-org-lambda
+    Description: Lambda Role Name
+    Type: String
+  pManagementAccountId:
+    AllowedPattern: '^\d{12}$'
+    ConstraintDescription: Must be 12 digits
+    Description: Organization Management Account ID
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-macie-org]
+    Default: sra-macie-org
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+
+Resources:
+  rMacieOrgConfigurationRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: Actions require * in resource
+          - id: W28
+            reason: Explicit name provided
+    Properties:
+      RoleName: !Ref pMacieOrgConfigurationRoleName
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Sub arn:${AWS::Partition}:iam::${pManagementAccountId}:role/${pMacieOrgLambdaRoleName}
+            Principal:
+              AWS:
+                - !Sub arn:${AWS::Partition}:iam::${pManagementAccountId}:root
+
+      Path: '/'
+      Policies:
+        - PolicyName: sra-macie-org-policy-organizations
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: Organizations
+                Effect: Allow
+                Action: organizations:ListAccounts
+                Resource: '*'
+
+        - PolicyName: sra-macie-org-policy-macie
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: MacieNoResource
+                Effect: Allow
+                Action:
+                  - macie2:DescribeBuckets
+                  - macie2:DescribeOrganizationConfiguration
+                  - macie2:DisableMacie
+                  - macie2:DisableOrganizationAdminAccount
+                  - macie2:DisassociateFromMasterAccount
+                  - macie2:EnableMacie
+                  - macie2:EnableOrganizationAdminAccount
+                  - macie2:GetClassificationExportConfiguration
+                  - macie2:GetMasterAccount
+                  - macie2:ListMembers
+                  - macie2:ListOrganizationAdminAccounts
+                  - macie2:PutClassificationExportConfiguration
+                  - macie2:UpdateMacieSession
+                  - macie2:UpdateOrganizationConfiguration
+                Resource: '*'
+
+              - Sid: MacieMember
+                Effect: Allow
+                Action:
+                  - macie2:CreateMember
+                  - macie2:DeleteMember
+                  - macie2:DisassociateMember
+                  - macie2:GetMember
+                Resource: !Sub arn:${AWS::Partition}:macie2:*:${AWS::AccountId}:*
+
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName

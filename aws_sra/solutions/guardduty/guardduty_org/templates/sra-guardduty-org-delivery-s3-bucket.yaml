@@ -1,0 +1,223 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates the GuardDuty delivery S3 bucket - 'guardduty_org' solution in the repo,
+  https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse4k)
+
+Metadata:
+  SRA:
+    Version: 1.1
+    Order: 5
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+
+      - Label:
+          default: GuardDuty Delivery S3 Properties
+        Parameters:
+          - pGuardDutyOrgDeliveryBucketPrefix
+          - pGuardDutyOrgDeliveryKMSKeyArn
+
+    ParameterLabels:
+      pGuardDutyOrgDeliveryBucketPrefix:
+        default: GuardDuty Delivery Bucket Prefix
+      pGuardDutyOrgDeliveryKMSKeyArn:
+        default: GuardDuty Delivery KMS Key
+      pSRASolutionName:
+        default: SRA Solution Name
+
+Parameters:
+  pGuardDutyOrgDeliveryBucketPrefix:
+    AllowedPattern: '^$|^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
+    ConstraintDescription:
+      S3 bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Default: sra-guardduty-org-delivery
+    Description:
+      GuardDuty Delivery S3 bucket prefix. The account and region will get added to the end. e.g. sra-guardduty-delivery-123456789012-us-east-1
+    Type: String
+  pGuardDutyOrgDeliveryKMSKeyArn:
+    AllowedPattern: '^arn:(aws[a-zA-Z-]*)?:kms:[a-z0-9-]+:\d{12}:key\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+    ConstraintDescription: 'Key ARN example:  arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
+    Description: KMS Key ARN to use for encrypting GuardDuty findings sent to S3
+    Type: String
+  pSRAStagingS3BucketNameSuffix:
+    AllowedPattern: '^[a-z0-9]{5}$'
+    ConstraintDescription: Must be exactly 5 alphanumeric lowercase characters
+    Default: x7k9t
+    Description:
+      Random suffix of 5 characters to add to S3 bucket names to avoid naming conflicts. Must be exactly 5 alphanumeric lowercase characters.
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-guardduty-org]
+    Default: sra-guardduty-org
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+
+Resources:
+  rGuardDutyDeliveryS3Bucket:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Type: AWS::S3::Bucket
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W35
+            reason: S3 access logging is not enabled.
+      checkov:
+        skip:
+          - id: CKV_AWS_18
+            comment: S3 access logging is not enabled.
+    Properties:
+      BucketName: !Sub ${pGuardDutyOrgDeliveryBucketPrefix}-${pSRAStagingS3BucketNameSuffix}-${AWS::AccountId}-${AWS::Region}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !Ref pGuardDutyOrgDeliveryKMSKeyArn
+              SSEAlgorithm: aws:kms
+            BucketKeyEnabled: True
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+
+  rGuardDutyDeliveryS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rGuardDutyDeliveryS3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: DenyPutObjectUnlessGuardDuty
+            Effect: Deny
+            Action: s3:PutObject
+            Condition:
+              ForAnyValue:StringNotEquals:
+                aws:CalledVia: guardduty.amazonaws.com
+            Resource:
+              - !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}
+              - !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}/*
+            Principal: '*'
+
+          - Sid: SecureTransport
+            Effect: Deny
+            Action: 's3:*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+            Resource:
+              - !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}
+              - !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}/*
+            Principal: '*'
+
+          - Sid: AWSBucketPermissionsCheck
+            Effect: Allow
+            Action:
+              - s3:GetBucketAcl
+              - s3:GetBucketLocation
+              - s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}
+            Principal:
+              Service:
+                - guardduty.amazonaws.com
+                - guardduty.af-south-1.amazonaws.com
+                - guardduty.ap-east-1.amazonaws.com
+                - guardduty.ap-south-2.amazonaws.com
+                - guardduty.ap-southeast-3.amazonaws.com
+                - guardduty.ap-southeast-4.amazonaws.com
+                - guardduty.ca-west-1.amazonaws.com
+                - guardduty.eu-south-1.amazonaws.com
+                - guardduty.eu-south-2.amazonaws.com
+                - guardduty.eu-central-2.amazonaws.com
+                - guardduty.me-south-1.amazonaws.com
+                - guardduty.me-central-1.amazonaws.com
+                - guardduty.il-central-1.amazonaws.com
+
+          - Sid: AWSBucketDelivery
+            Effect: Allow
+            Action: s3:PutObject
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+            Resource: !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}/*
+            Principal:
+              Service:
+                - guardduty.amazonaws.com
+                - guardduty.af-south-1.amazonaws.com
+                - guardduty.ap-east-1.amazonaws.com
+                - guardduty.ap-south-2.amazonaws.com
+                - guardduty.ap-southeast-3.amazonaws.com
+                - guardduty.ap-southeast-4.amazonaws.com
+                - guardduty.ca-west-1.amazonaws.com
+                - guardduty.eu-south-1.amazonaws.com
+                - guardduty.eu-south-2.amazonaws.com
+                - guardduty.eu-central-2.amazonaws.com
+                - guardduty.me-south-1.amazonaws.com
+                - guardduty.me-central-1.amazonaws.com
+                - guardduty.il-central-1.amazonaws.com
+
+          - Sid: DenyUnencryptedObjectUploads
+            Effect: Deny
+            Action: s3:PutObject
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption: aws:kms
+            Resource: !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}/*
+            Principal:
+              Service:
+                - guardduty.amazonaws.com
+                - guardduty.af-south-1.amazonaws.com
+                - guardduty.ap-east-1.amazonaws.com
+                - guardduty.ap-south-2.amazonaws.com
+                - guardduty.ap-southeast-3.amazonaws.com
+                - guardduty.ap-southeast-4.amazonaws.com
+                - guardduty.ca-west-1.amazonaws.com
+                - guardduty.eu-south-1.amazonaws.com
+                - guardduty.eu-south-2.amazonaws.com
+                - guardduty.eu-central-2.amazonaws.com
+                - guardduty.me-south-1.amazonaws.com
+                - guardduty.me-central-1.amazonaws.com
+                - guardduty.il-central-1.amazonaws.com
+
+          - Sid: DenyIncorrectEncryptionHeader
+            Effect: Deny
+            Action: s3:PutObject
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption-aws-kms-key-id: !Sub ${pGuardDutyOrgDeliveryKMSKeyArn}
+            Resource: !Sub arn:aws:s3:::${rGuardDutyDeliveryS3Bucket}/*
+            Principal:
+              Service:
+                - guardduty.amazonaws.com
+                - guardduty.af-south-1.amazonaws.com
+                - guardduty.ap-east-1.amazonaws.com
+                - guardduty.ap-south-2.amazonaws.com
+                - guardduty.ap-southeast-3.amazonaws.com
+                - guardduty.ap-southeast-4.amazonaws.com
+                - guardduty.ca-west-1.amazonaws.com
+                - guardduty.eu-south-1.amazonaws.com
+                - guardduty.eu-south-2.amazonaws.com
+                - guardduty.eu-central-2.amazonaws.com
+                - guardduty.me-south-1.amazonaws.com
+                - guardduty.me-central-1.amazonaws.com
+                - guardduty.il-central-1.amazonaws.com
+
+
+Outputs:
+  oGuardDutyDeliveryS3Bucket:
+    Description: SRA GuardDuty Delivery S3 Bucket
+    Value: !Ref rGuardDutyDeliveryS3Bucket
