@@ -1,0 +1,3 @@
+AccountName,SSOUserEmail,AccountEmail,SSOUserFirstName,SSOUserLastName,OrgUnit,Status,AccountId,ErrroMsg
+cliente-dev,aws+master-cliente-dev@yol1.com,aws+master-cliente-dev@yol1.com,Cliente,dev,Sandbox (ou-2qv3-p3nzuari),,,
+core-dev,aws+master-core-dev@yol1.com,aws+master-core-dev@yol1.com,Core,dev,Sandbox (ou-2qv3-p3nzuari),,,
