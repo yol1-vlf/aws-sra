@@ -97,6 +97,13 @@ for file in "${PYTHON_FILES[@]}"; do
     fi
 done
 
+# Verificar que el archivo CSV existe
+CSV_FILE="accounts.csv"
+if [[ ! -f "$CSV_FILE" ]]; then
+    print_warning "Archivo $CSV_FILE no encontrado en el directorio actual"
+    exit 1
+fi
+
 print_info "Todos los archivos Python encontrados"
 
 # ========================================
@@ -202,6 +209,20 @@ else
     exit 1
 fi
 
+# Subir archivo CSV
+print_info "Subiendo archivo CSV..."
+aws_cmd="aws s3 cp $CSV_FILE s3://$BUCKET_NAME/$SRASolutionName/accounts/$CSV_FILE"
+if [[ -n "$AWS_PROFILE" ]]; then
+    aws_cmd+=" --profile $AWS_PROFILE"
+fi
+
+if eval $aws_cmd; then
+    print_info "✅ $CSV_FILE subido exitosamente"
+else
+    print_error "❌ Error al subir $CSV_FILE"
+    exit 1
+fi
+
 # ========================================
 # 6. LIMPIEZA Y VERIFICACIÓN
 # ========================================
@@ -223,9 +244,25 @@ fi
 S3_FILES=$(eval $aws_cmd 2>/dev/null || echo "")
 
 if echo "$S3_FILES" | grep -q "ct_batchcreation_lambda.zip" && echo "$S3_FILES" | grep -q "ct_account_create_lambda.zip"; then
-    print_info "✅ Todos los archivos verificados en S3"
+    print_info "✅ Todos los archivos ZIP verificados en S3"
 else
-    print_error "❌ No se pudieron verificar todos los archivos en S3"
+    print_error "❌ No se pudieron verificar todos los archivos ZIP en S3"
+    exit 1
+fi
+
+# Verificar archivo CSV
+print_info "Verificando archivo CSV en S3..."
+aws_cmd="aws s3 ls s3://$BUCKET_NAME/$SRASolutionName/accounts/"
+if [[ -n "$AWS_PROFILE" ]]; then
+    aws_cmd+=" --profile $AWS_PROFILE"
+fi
+
+S3_CSV_FILES=$(eval $aws_cmd 2>/dev/null || echo "")
+
+if echo "$S3_CSV_FILES" | grep -q "$CSV_FILE"; then
+    print_info "✅ Archivo CSV verificado en S3"
+else
+    print_error "❌ No se pudo verificar el archivo CSV en S3"
     exit 1
 fi
 
@@ -242,14 +279,17 @@ print_info "Ruta: s3://$BUCKET_NAME/$S3_PREFIX/"
 print_info "Archivos subidos:"
 echo "  - ct_batchcreation_lambda.zip"
 echo "  - ct_account_create_lambda.zip"
+echo "  - $CSV_FILE"
 
 echo ""
 print_info "Para verificar los archivos:"
 echo "aws s3 ls s3://$BUCKET_NAME/$S3_PREFIX/ --profile $AWS_PROFILE"
+echo "aws s3 ls s3://$BUCKET_NAME/$SRASolutionName/accounts/ --profile $AWS_PROFILE"
 
 echo ""
-print_info "Para descargar un archivo:"
+print_info "Para descargar archivos:"
 echo "aws s3 cp s3://$BUCKET_NAME/$S3_PREFIX/ct_batchcreation_lambda.zip . --profile $AWS_PROFILE"
+echo "aws s3 cp s3://$BUCKET_NAME/$SRASolutionName/accounts/$CSV_FILE . --profile $AWS_PROFILE"
 
 echo ""
 print_info "Ahora puedes desplegar la solución usando:"

@@ -18,7 +18,6 @@ Metadata:
           - pSRASolutionName
           - pSRASolutionVersion
           - pSRAStagingS3BucketName
-          - pS3BucketName
           - pS3KeyName
 
       - Label:
@@ -45,7 +44,7 @@ Metadata:
         default: Stack Set Role
       pStackExecutionRole:
         default: Stack execution role
-      pS3BucketName:
+      pSRAStagingS3BucketName:
         default: S3 Bucket Name
       pS3KeyName:
         default: S3 Key Name
@@ -77,16 +76,9 @@ Parameters:
     Default: sra-execution
     Description: The execution role name that is used in the stack.
     Type: String
-  pS3BucketName:
-    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
-    ConstraintDescription:
-      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
-    Default: /sra/batch-account-creation/s3-bucket-name
-    Description: SSM Parameter for Amazon S3 Bucket Name containing the account creation CSV file.
-    Type: AWS::SSM::Parameter::Value<String>
   pS3KeyName:
-    AllowedValues: [accounts.csv]
-    Default: accounts.csv
+    AllowedValues: [accounts/accounts.csv]
+    Default: accounts/accounts.csv
     Description: File name of the CSV file containing the account creation data.
     Type: String
   pDynamoDBReadCapacityUnits:
@@ -154,7 +146,9 @@ Resources:
 
   rNewAccountHandlerLambdaExecutionRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
+      RoleName: !Sub '${pSRASolutionName}-NewAccountHandlerLambdaExecutionRole'
       AssumeRolePolicyDocument:
         Statement:
           - Action: sts:AssumeRole
@@ -173,13 +167,14 @@ Resources:
                   - s3:GetObjectAcl
                 Effect: Allow
                 Resource:
-                  - !Sub arn:${AWS::Partition}:s3:::${pS3BucketName}
-                  - !Sub arn:${AWS::Partition}:s3:::${pS3BucketName}/${pS3KeyName}
+                  - !Sub arn:${AWS::Partition}:s3:::${pSRAStagingS3BucketName}/${pSRASolutionName}
+                  - !Sub arn:${AWS::Partition}:s3:::${pSRAStagingS3BucketName}/${pSRASolutionName}/${pS3KeyName}
       ManagedPolicyArns:
         - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
 
   rNewAccountHandlerPolicy:
     Type: AWS::IAM::Policy
+    DeletionPolicy: Delete
     Properties:
       PolicyDocument:
         Statement:
@@ -212,7 +207,9 @@ Resources:
 
   rNewAccountHandlerLambda:
     Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
     Properties:
+      FunctionName: !Sub '${pSRASolutionName}-NewAccountHandlerLambda'
       Code:
         S3Bucket: !Ref pSRAStagingS3BucketName
         S3Key: !Sub '${pSRASolutionName}/lambda_code/ct_batchcreation_lambda.zip'
@@ -224,9 +221,9 @@ Resources:
           TABLE_NAME:
             Ref: rNewAccountDetailsTable
           BATCH_BUCKET_NAME:
-            Ref: pS3BucketName
+            Ref: pSRAStagingS3BucketName
           BATCH_KEY_NAME:
-            Ref: pS3KeyName
+            !Sub '${pSRASolutionName}/${pS3KeyName}'
       Timeout: !Ref pNewAccountHandlerTimeout
     DependsOn:
       - rNewAccountHandlerPolicy
@@ -238,7 +235,9 @@ Resources:
 
   rCreateManagedAccountLambda:
     Type: AWS::Lambda::Function
+    DeletionPolicy: Delete
     Properties:
+      FunctionName: !Sub '${pSRASolutionName}-CreateManagedAccountLambda'
       Code:
         S3Bucket: !Ref pSRAStagingS3BucketName
         S3Key: !Sub '${pSRASolutionName}/lambda_code/ct_account_create_lambda.zip'
@@ -263,6 +262,7 @@ Resources:
 
   rPermissionForEventsToInvokeLambdachk:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Delete
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt "rCreateManagedAccountLambda.Arn"
@@ -271,7 +271,9 @@ Resources:
 
   rCreateManagedAccountLambdaRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
+      RoleName: !Sub '${pSRASolutionName}-CreateManagedAccountLambdaRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -334,6 +336,7 @@ Resources:
 
   rCaptureControlTowerLifeCycleEvents:
     Type: AWS::Events::Rule
+    DeletionPolicy: Delete
     Properties:
       Description: Capture Control Tower LifeCycle Events and Trigger an Action
       EventPattern:
@@ -353,6 +356,7 @@ Resources:
 
   rEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
+    DeletionPolicy: Delete
     DependsOn: 
       - rNewAccountHandlerTriggerLambda
     Properties:
