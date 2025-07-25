@@ -1,0 +1,153 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  Creates S3 buckets to store the conformance pack results. - 'config_conformance_pack_org' solution in the repo,
+  https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse3o)
+
+Metadata:
+  SRA:
+    Version: 1.1
+    Order: 1
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pOrganizationId
+          - pSRASolutionName
+
+    ParameterLabels:
+      pOrganizationId:
+        default: AWS Organizations ID
+      pSRASolutionName:
+        default: SRA Solution Name
+
+Parameters:
+  pOrganizationId:
+    AllowedPattern: '^o-[a-z0-9]{10,32}$'
+    ConstraintDescription: Must start with 'o-' followed by from 10 to 32 lowercase letters or digits. (e.g. o-abc1234567)
+    Description: AWS Organizations ID
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-config-conformance-pack-org]
+    Default: sra-config-conformance-pack-org
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+  pSRAStagingS3BucketNameSuffix:
+    AllowedPattern: '^[a-z0-9]{5}$'
+    ConstraintDescription: Must be exactly 5 alphanumeric lowercase characters
+    Default: x7k9m
+    Description:
+      Random suffix of 5 characters to add to S3 bucket names to avoid naming conflicts. Must be exactly 5 alphanumeric lowercase characters.
+    Type: String
+
+Resources:
+  rConformancePackBucket:
+    Type: AWS::S3::Bucket
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W35
+            reason: S3 access logging not enabled
+      checkov:
+        skip:
+          - id: CKV_AWS_18
+            comment: Access logging intentionally not enabled.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub awsconfigconforms-sra-${pSRAStagingS3BucketNameSuffix}-${AWS::AccountId}-${AWS::Region}
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+
+  rConformancePackBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F16
+            reason: The principal is restricted to the AWS Organization ID with the condition statement
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Bucket: !Ref rConformancePackBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AWSConfigConformsBucketPermissionsCheck
+            Effect: Allow
+            Action: s3:GetBucketAcl
+            Condition:
+              StringEquals:
+                aws:PrincipalOrgID: !Ref pOrganizationId
+              StringLike:
+                aws:PrincipalArn:
+                  - !Sub arn:${AWS::Partition}:iam::*:role/aws-service-role/config-conforms.amazonaws.com/AWSServiceRoleForConfigConforms
+                  - !Sub arn:${AWS::Partition}:iam::*:role/sra-execution
+            Resource: !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}
+            Principal: '*'
+
+          - Sid: AWSConfigConformsBucketDelivery
+            Effect: Allow
+            Action: s3:PutObject
+            Condition:
+              StringEquals:
+                aws:PrincipalOrgID: !Ref pOrganizationId
+              StringLike:
+                aws:PrincipalArn: !Sub arn:${AWS::Partition}:iam::*:role/aws-service-role/config-conforms.amazonaws.com/AWSServiceRoleForConfigConforms
+            Resource: !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}/*
+            Principal: '*'
+
+          - Sid: AWSConfigConformsBucketReadAccess
+            Effect: Allow
+            Action: s3:GetObject
+            Condition:
+              StringEquals:
+                aws:PrincipalOrgID: !Ref pOrganizationId
+            Resource: !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}/*
+            Principal: '*'
+
+          - Sid: DenyExternalPrincipals
+            Effect: Deny
+            Action: 's3:*'
+            Condition:
+              StringNotEquals:
+                aws:PrincipalOrgID: !Ref pOrganizationId
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}
+              - !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}/*
+            Principal: '*'
+
+          - Sid: SecureTransport
+            Effect: Deny
+            Action: 's3:*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}
+              - !Sub arn:${AWS::Partition}:s3:::${rConformancePackBucket}/*
+            Principal: '*'
+
+Outputs:
+  oConformancePackDeliveryBucket:
+    Description: Conformance Pack Delivery Bucket Name
+    Value: !Ref rConformancePackBucket

@@ -1,0 +1,108 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates an IAM role to disassociate the administrator account - 'firewall_manager_org' solution in the repo,
+  https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse4d)
+
+Metadata:
+  SRA:
+    Version: 1.1
+    Order: 3
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+
+      - Label:
+          default: Role Properties
+        Parameters:
+          - pFMSDisassociateRoleName
+          - pManagementAccountId
+          - pFirewallManagerDelegateAdminLambdaRoleName
+
+    ParameterLabels:
+      pFMSDisassociateRoleName:
+        default: FMS Disassociate IAM Role Name
+      pManagementAccountId:
+        default: Management Account ID
+      pFirewallManagerDelegateAdminLambdaRoleName:
+        default: FMS Delegate Admin Lambda Role Name
+      pSRASolutionName:
+        default: SRA Solution Name
+
+Parameters:
+  pFMSDisassociateRoleName:
+    AllowedPattern: '^[\w+=,.@-]{1,64}$'
+    ConstraintDescription: Max 64 alphanumeric characters. Also special characters supported [+, =, ., @, -]
+    Default: sra-fms-disassociate
+    Description: FMS IAM Role Name
+    Type: String
+  pFirewallManagerDelegateAdminLambdaRoleName:
+    AllowedPattern: '^[\w+=,.@-]{1,64}$'
+    ConstraintDescription: Max 64 alphanumeric characters. Also special characters supported [+, =, ., @, -]
+    Default: sra-firewall-manager-org-lambda
+    Description: Firewall Manager delegate admin Lambda Role Name
+    Type: String
+  pManagementAccountId:
+    AllowedPattern: '^\d{12}$'
+    ConstraintDescription: Must be 12 digits
+    Description: Management account ID
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-firewall-manager-org]
+    Default: sra-firewall-manager-org
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+
+Resources:
+  rFMSDisassociateRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: Allow put and delete configuration aggregator for all aggregators
+          - id: W28
+            reason: Explicit name provided for automation resource identification
+    Properties:
+      RoleName: !Ref pFMSDisassociateRoleName
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:PrincipalArn:
+                  - !Sub arn:${AWS::Partition}:iam::${pManagementAccountId}:role/${pFirewallManagerDelegateAdminLambdaRoleName}
+            Principal:
+              AWS:
+                - !Sub arn:${AWS::Partition}:iam::${pManagementAccountId}:root
+      Path: '/'
+      Policies:
+        - PolicyName: !Ref pFMSDisassociateRoleName
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowFMSDisassociateAdminAccount
+                Effect: Allow
+                Action:
+                  - fms:DisassociateAdminAccount
+                  - fms:GetAdminAccount
+                Resource: '*'
+
+              - Sid: OrganizationAccess
+                Effect: Allow
+                Action:
+                  - organizations:DescribeAccount
+                  - organizations:DescribeOrganization
+                  - organizations:ListAccounts
+                Resource: '*'
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName

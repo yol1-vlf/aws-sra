@@ -1,0 +1,51 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates an IAM role for AWS Config Recorder in the Control Tower Management account. - 'config_management_account' solution in the
+  repo, https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse2s)
+Metadata:
+  SRA:
+    Version: 1.0
+    Order: 2
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionTagKey
+          - pSRASolutionName
+          - pManagedResourcePrefix
+    ParameterLabels:
+      pManagedResourcePrefix:
+        default: Managed Resource Prefix
+      pSRASolutionName:
+        default: SRA Solution Name
+      pSRASolutionTagKey:
+        default: SRA Solution Tag Key
+
+Parameters:
+  pManagedResourcePrefix:
+    AllowedValues: [aws-controltower]
+    Default: aws-controltower
+    Description: Prefix for the managed resources
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-config-management-account]
+    Default: sra-config-management-account
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+  pSRASolutionTagKey:
+    AllowedValues: [sra-solution]
+    Default: sra-solution
+    Description: The SRA solution tag key applied to all resources created by the solution that support tagging. The value is the pSRASolutionName.
+    Type: String
+
+Resources:
+  rConfigServiceLinkedRole:
+    Type: AWS::IAM::ServiceLinkedRole
+    Properties:
+      AWSServiceName: config.amazonaws.com
+      Description: A service-linked role for the ConfigRecorder.

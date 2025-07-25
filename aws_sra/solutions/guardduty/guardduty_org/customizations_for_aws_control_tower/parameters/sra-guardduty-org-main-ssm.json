@@ -1,0 +1,82 @@
+[
+    {
+        "ParameterKey": "pAutoEnableS3Logs",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pAutoEnableKubernetesAuditLogs",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pAutoEnableMalwareProtection",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pEnableRdsLoginEvents",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pEnableRuntimeMonitoring",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pEnableEksAddonManagement",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pEnableEcsFargateAgentManagement",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pEnableEc2AgentManagement",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pEnableLambdaNetworkLogs",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "pControlTowerRegionsOnly",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "pCreateLambdaLogGroup",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "pDisableGuardDuty",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "pEnabledRegions",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "pFindingPublishingFrequency",
+        "ParameterValue": "FIFTEEN_MINUTES"
+    },
+    {
+        "ParameterKey": "pGuardDutyOrgDeliveryBucketPrefix",
+        "ParameterValue": "sra-guardduty-org-delivery"
+    },
+    {
+        "ParameterKey": "pGuardDutyOrgDeliveryKeyAlias",
+        "ParameterValue": "sra-guardduty-org-delivery-key"
+    },
+    {
+        "ParameterKey": "pLambdaLogGroupKmsKey",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "pLambdaLogGroupRetention",
+        "ParameterValue": "14"
+    },
+    {
+        "ParameterKey": "pLambdaLogLevel",
+        "ParameterValue": "INFO"
+    },
+    {
+        "ParameterKey": "pSRAAlarmEmail",
+        "ParameterValue": ""
+    }
+]
