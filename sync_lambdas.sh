@@ -97,13 +97,21 @@ for file in "${PYTHON_FILES[@]}"; do
     fi
 done
 
-# Verificar que el archivo CSV existe
-CSV_FILE="accounts.csv"
+# Construir el nombre del archivo CSV basado en la rama de Git
+GITHUB_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+CSV_FILE="accounts(${GITHUB_BRANCH}).csv"
+
 if [[ ! -f "$CSV_FILE" ]]; then
-    print_warning "Archivo $CSV_FILE no encontrado en el directorio actual"
+    print_error "No se encontró el archivo CSV para la rama actual: $CSV_FILE"
+    print_info "Rama actual: $GITHUB_BRANCH"
+    print_info "Archivos CSV disponibles en el directorio actual:"
+    ls -la *.csv 2>/dev/null || print_warning "No se encontraron archivos CSV en el directorio actual"
+    print_info "Archivo esperado: $CSV_FILE"
     exit 1
 fi
 
+print_info "Rama Git detectada: $GITHUB_BRANCH"
+print_info "Archivo CSV detectado: $CSV_FILE"
 print_info "Todos los archivos Python encontrados"
 
 # ========================================
@@ -209,17 +217,17 @@ else
     exit 1
 fi
 
-# Subir archivo CSV
-print_info "Subiendo archivo CSV..."
-aws_cmd="aws s3 cp $CSV_FILE s3://$BUCKET_NAME/$SRASolutionName/accounts/$CSV_FILE"
+# Subir archivo CSV con nombre estandarizado
+print_info "Subiendo archivo CSV como 'accounts.csv'..."
+aws_cmd="aws s3 cp $CSV_FILE s3://$BUCKET_NAME/$SRASolutionName/accounts/accounts.csv"
 if [[ -n "$AWS_PROFILE" ]]; then
     aws_cmd+=" --profile $AWS_PROFILE"
 fi
 
 if eval $aws_cmd; then
-    print_info "✅ $CSV_FILE subido exitosamente"
+    print_info "✅ $CSV_FILE subido exitosamente como accounts.csv"
 else
-    print_error "❌ Error al subir $CSV_FILE"
+    print_error "❌ Error al subir $CSV_FILE como accounts.csv"
     exit 1
 fi
 
@@ -259,8 +267,8 @@ fi
 
 S3_CSV_FILES=$(eval $aws_cmd 2>/dev/null || echo "")
 
-if echo "$S3_CSV_FILES" | grep -q "$CSV_FILE"; then
-    print_info "✅ Archivo CSV verificado en S3"
+if echo "$S3_CSV_FILES" | grep -q "accounts.csv"; then
+    print_info "✅ Archivo CSV verificado en S3 como accounts.csv"
 else
     print_error "❌ No se pudo verificar el archivo CSV en S3"
     exit 1
@@ -276,10 +284,12 @@ print_info "✅ Sincronización completada exitosamente!"
 print_info "Solución: $SRASolutionName"
 print_info "Bucket: $BUCKET_NAME"
 print_info "Ruta: s3://$BUCKET_NAME/$S3_PREFIX/"
+print_info "Archivo CSV local: $CSV_FILE"
+print_info "Archivo CSV en S3: accounts.csv"
 print_info "Archivos subidos:"
 echo "  - ct_batchcreation_lambda.zip"
 echo "  - ct_account_create_lambda.zip"
-echo "  - $CSV_FILE"
+echo "  - $CSV_FILE → accounts.csv"
 
 echo ""
 print_info "Para verificar los archivos:"
@@ -289,7 +299,7 @@ echo "aws s3 ls s3://$BUCKET_NAME/$SRASolutionName/accounts/ --profile $AWS_PROF
 echo ""
 print_info "Para descargar archivos:"
 echo "aws s3 cp s3://$BUCKET_NAME/$S3_PREFIX/ct_batchcreation_lambda.zip . --profile $AWS_PROFILE"
-echo "aws s3 cp s3://$BUCKET_NAME/$SRASolutionName/accounts/$CSV_FILE . --profile $AWS_PROFILE"
+echo "aws s3 cp s3://$BUCKET_NAME/$SRASolutionName/accounts/accounts.csv . --profile $AWS_PROFILE"
 
 echo ""
 print_info "Ahora puedes desplegar la solución usando:"
