@@ -522,3 +522,4 @@ poetry.lock
 #proyectos
 sra-parameters.json
 sra-parameters-*.json
+accounts.csv
