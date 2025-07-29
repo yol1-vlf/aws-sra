@@ -1,0 +1,191 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates an OIDC Provider and GitHub Actions Role for AWS Control Tower - 'github-oidc'
+  solution in the repo, https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse6b)
+
+Metadata:
+  SRA:
+    Version: 1.0
+    Entry: Parameters for deploying the solution resolving SSM parameters
+    Order: 1
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+
+      - Label:
+          default: GitHub OIDC Configuration Properties
+        Parameters:
+          - pGitHubOrganization
+          - pGitHubRepository
+          - pMaxSessionDuration
+
+    ParameterLabels:
+      pGitHubOrganization:
+        default: GitHub Organization
+      pGitHubRepository:
+        default: GitHub Repository
+      pMaxSessionDuration:
+        default: Max Session Duration
+      pSRASolutionName:
+        default: SRA Solution Name
+
+Parameters:
+  pGitHubOrganization:
+    AllowedPattern: '^[a-zA-Z0-9-]+$'
+    ConstraintDescription: Must contain only alphanumeric characters and hyphens
+    Description: GitHub organization name
+    Type: String
+  pGitHubRepository:
+    AllowedPattern: '^[a-zA-Z0-9-_.]+$'
+    ConstraintDescription: Must contain only alphanumeric characters, hyphens, underscores, and dots
+    Description: GitHub repository name
+    Type: String
+  pMaxSessionDuration:
+    ConstraintDescription: Max Session Duration must be a number between 900 and 43200, inclusive.
+    Default: 43200
+    Description: Maximum session duration in seconds (12 hours maximum)
+    MinValue: 900
+    MaxValue: 43200
+    Type: Number
+  pSRASolutionName:
+    AllowedValues: [sra-github-oidc]
+    Default: sra-github-oidc
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+
+Conditions:
+  cNotGlobalRegionUsEast1: !Not [!Equals [!Ref 'AWS::Region', us-east-1]]
+
+Resources:
+  # OIDC Identity Provider for GitHub Actions
+  rGitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      # GitHub OIDC thumbprints - Official values from GitHub
+      # Reference: https://github.blog/changelog/2023-06-27-github-actions-update-on-oidc-integration-with-aws/
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+      Tags:
+        - Key: Name
+          Value: sra-aws-ctautomation-oidc-provider
+        - Key: Purpose
+          Value: ControlTowerAutomation
+        - Key: Organization
+          Value: !Ref pGitHubOrganization
+        - Key: Repository
+          Value: !Ref pGitHubRepository
+        - Key: ManagedBy
+          Value: sra-aws-ctautomation
+        - Key: ResourceType
+          Value: OIDCProvider
+        - Key: Environment
+          Value: production
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+
+  rGitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'sra-aws-ctautomation-github-actions-role'
+      MaxSessionDuration: !Ref pMaxSessionDuration
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref rGitHubOIDCProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                'token.actions.githubusercontent.com:aud': sts.amazonaws.com
+              StringLike:
+                'token.actions.githubusercontent.com:sub': !Sub 'repo:${pGitHubOrganization}/*:*'
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      Policies:
+        - PolicyName: GitHubActionsBasePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:GetCallerIdentity
+                  - sts:TagSession
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketLocation
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource:
+                  - !Sub 'arn:aws:logs:*:${AWS::AccountId}:log-group:/github-actions/*'
+        - PolicyName: CloudFormationDeploymentPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:*
+                  - iam:*
+                  - s3:*
+                  - logs:*
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: sra-aws-ctautomation-github-actions-role
+        - Key: Purpose
+          Value: ControlTowerAutomation
+        - Key: Organization
+          Value: !Ref pGitHubOrganization
+        - Key: Repository
+          Value: !Ref pGitHubRepository
+        - Key: AccountId
+          Value: !Ref AWS::AccountId
+        - Key: ManagedBy
+          Value: sra-aws-ctautomation
+        - Key: ResourceType
+          Value: IAMRole
+        - Key: Environment
+          Value: production
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+
+Outputs:
+  oGitHubOIDCProviderArn:
+    Description: ARN of the GitHub OIDC Provider
+    Value: !Ref rGitHubOIDCProvider
+    Export:
+      Name: !Sub '${AWS::StackName}-GitHubOIDCProviderArn'
+
+  oGitHubActionsRoleArn:
+    Description: ARN of the GitHub Actions IAM Role
+    Value: !GetAtt rGitHubActionsRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-GitHubActionsRoleArn'
+
+  oGitHubActionsRoleName:
+    Description: Name of the GitHub Actions IAM Role
+    Value: !Ref rGitHubActionsRole
+    Export:
+      Name: !Sub '${AWS::StackName}-GitHubActionsRoleName'
+
+
