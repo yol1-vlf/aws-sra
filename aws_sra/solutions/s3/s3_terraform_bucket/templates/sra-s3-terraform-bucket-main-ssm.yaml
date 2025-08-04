@@ -1,0 +1,146 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates StackSet and Stack to deploy S3 buckets for Terraform deployment in each account -
+  's3_terraform_bucket' solution in the repo, https://github.com/aws-samples/aws-security-reference-architecture-examples (sra-1ssgnse5t)
+
+Metadata:
+  SRA:
+    Version: 1.0
+    Order: 1
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+          - pSRASolutionVersion
+          - pSRAStagingS3BucketName
+          - pRootOrganizationalUnitId
+
+      - Label:
+          default: S3 Bucket Properties
+        Parameters:
+          - pTerraformBucketNamePrefix
+          - pTerraformBucketNameSuffix
+          - pKmsKeyArn
+
+    ParameterLabels:
+      pTerraformBucketNamePrefix:
+        default: Terraform Bucket Name Prefix
+      pTerraformBucketNameSuffix:
+        default: Terraform Bucket Name Suffix
+      pKmsKeyArn:
+        default: (Optional) KMS Key ARN
+      pRootOrganizationalUnitId:
+        default: Root Organizational Unit ID
+      pSRASolutionName:
+        default: SRA Solution Name
+      pSRASolutionVersion:
+        default: SRA Solution Version
+      pSRAStagingS3BucketName:
+        default: SRA Staging S3 Bucket Name
+
+Parameters:
+  pRootOrganizationalUnitId:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+    Default: /sra/control-tower/root-organizational-unit-id
+    Description: SSM Parameter for Root Organizational Unit ID
+    Type: AWS::SSM::Parameter::Value<String>
+  pTerraformBucketNamePrefix:
+    AllowedPattern: '^[a-z0-9-]+$'
+    Default: 'terraform-state'
+    Description: Prefix for the Terraform S3 bucket name
+    Type: String
+  pTerraformBucketNameSuffix:
+    AllowedPattern: '^[a-z0-9]+$'
+    Default: 'x7k9m'
+    Description: Suffix for the Terraform S3 bucket name
+    Type: String
+  pKmsKeyArn:
+    AllowedPattern: '^$|^arn:(aws[a-zA-Z-]*){1}:kms:[a-z0-9-]+:\d{12}:key\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+    ConstraintDescription: 'Key ARN example:  arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
+    Default: ''
+    Description:
+      (Optional) KMS Key ARN to use for encrypting the Lambda logs data. If empty, encryption is enabled with CloudWatch Logs managing the server-side
+      encryption keys.
+    Type: String
+  pSRASolutionName:
+    AllowedValues: [sra-s3-terraform-bucket]
+    Default: sra-s3-terraform-bucket
+    Description: The SRA solution name. The default value is the folder name of the solution
+    Type: String
+  pSRASolutionVersion:
+    AllowedValues: [v1.0]
+    Default: v1.0
+    Description: The SRA solution version. Used to trigger updates on the nested StackSets.
+    Type: String
+  pSRAStagingS3BucketName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+    Default: /sra/staging-s3-bucket-name
+    Description:
+      SSM Parameter for SRA Staging S3 bucket name for the artifacts relevant to solution. (e.g., lambda zips, CloudFormation templates) S3 bucket
+      name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  rS3TerraformBucketStackSet:
+    Type: AWS::CloudFormation::StackSet
+    Properties:
+      StackSetName: sra-s3-terraform-bucket
+      AutoDeployment:
+        Enabled: true
+        RetainStacksOnAccountRemoval: false
+      CallAs: SELF
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+      Description: !Sub ${pSRASolutionVersion} - Deploys S3 buckets for Terraform state storage via ${pSRASolutionName}.
+      ManagedExecution:
+        Active: true
+      OperationPreferences:
+        FailureTolerancePercentage: 100
+        MaxConcurrentPercentage: 100
+        RegionConcurrencyType: PARALLEL
+      PermissionModel: SERVICE_MANAGED
+      StackInstancesGroup:
+        - DeploymentTargets:
+            OrganizationalUnitIds:
+              - !Ref pRootOrganizationalUnitId
+          Regions:
+            - !Ref AWS::Region
+      TemplateURL: !Sub https://${pSRAStagingS3BucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${pSRASolutionName}/templates/sra-s3-terraform-bucket.yaml
+      Parameters:
+        - ParameterKey: pTerraformBucketNamePrefix
+          ParameterValue: !Ref pTerraformBucketNamePrefix
+        - ParameterKey: pTerraformBucketNameSuffix
+          ParameterValue: !Ref pTerraformBucketNameSuffix
+        - ParameterKey: pKmsKeyArn
+          ParameterValue: !Ref pKmsKeyArn
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+
+  rS3TerraformBucketStack:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: !Sub https://${pSRAStagingS3BucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${pSRASolutionName}/templates/sra-s3-terraform-bucket.yaml
+      Parameters:
+        pTerraformBucketNamePrefix: !Ref pTerraformBucketNamePrefix
+        pTerraformBucketNameSuffix: !Ref pTerraformBucketNameSuffix
+        pKmsKeyArn: !Ref pKmsKeyArn
+      Tags:
+        - Key: sra-solution
+          Value: !Ref pSRASolutionName
+        - Key: ManagedBy
+          Value: !Ref pSRASolutionName
+
+ 

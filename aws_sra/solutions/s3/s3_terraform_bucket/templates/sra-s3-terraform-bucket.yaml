@@ -1,0 +1,101 @@
+########################################################################
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+########################################################################
+AWSTemplateFormatVersion: 2010-09-09
+Description:
+  This template creates Lambda function and associated resources to create S3 buckets for Terraform deployment in each account.
+
+Parameters:
+  pTerraformBucketNameSuffix:
+    AllowedPattern: '^[a-z0-9]+$'
+    Default: 'x7k9m'
+    Description: Suffix for the Terraform S3 bucket name
+    Type: String
+  pKmsKeyArn:
+    AllowedPattern: '^$|^arn:(aws[a-zA-Z-]*){1}:kms:[a-z0-9-]+:\d{12}:key\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+    ConstraintDescription: 'Key ARN example:  arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
+    Default: ''
+    Description:
+      (Optional) KMS Key ARN to use for encrypting the Lambda logs data. If empty, encryption is enabled with CloudWatch Logs managing the server-side
+      encryption keys.
+    Type: String
+  pTerraformBucketNamePrefix:
+    AllowedPattern: '^[a-z0-9-]+$'
+    Default: 'terraform-state'
+    Description: Prefix for the Terraform S3 bucket name
+    Type: String
+
+Conditions:
+  cUseKmsEncryption: !Not [!Equals [!Ref pKmsKeyArn, '']]
+
+Resources:
+  rS3TerraformBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${pTerraformBucketNamePrefix}-${pTerraformBucketNameSuffix}-${AWS::Region}-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        !If
+          - cUseKmsEncryption
+          - ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: aws:kms
+                  KMSMasterKeyID: !Ref pKmsKeyArn
+          - ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: AES256
+      Tags:
+        - Key: Name
+          Value: !Sub terraform-state-${AWS::AccountId}
+        - Key: Purpose
+          Value: terraform-state-storage
+        - Key: Environment
+          Value: production
+        - Key: ManagedBy
+          Value: sra-s3-terraform-bucket
+
+  rS3TerraformBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rS3TerraformBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: EnforcedTLS
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt rS3TerraformBucket.Arn
+              - !Sub ${rS3TerraformBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+          - Sid: RootAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
+            Action: s3:*
+            Resource:
+              - !GetAtt rS3TerraformBucket.Arn
+              - !Sub ${rS3TerraformBucket.Arn}/*
+ 
+Outputs:
+  oS3TerraformBucketName:
+    Description: Name of the created S3 bucket for Terraform state
+    Export:
+      Name: !Sub ${AWS::StackName}-S3TerraformBucketName
+    Value: !Ref rS3TerraformBucket
+
+  oS3TerraformBucketArn:
+    Description: ARN of the created S3 bucket for Terraform state
+    Export:
+      Name: !Sub ${AWS::StackName}-S3TerraformBucketArn
+    Value: !GetAtt rS3TerraformBucket.Arn

@@ -357,7 +357,24 @@ Resources:
                 aws:PrincipalArn:
                   - !Sub arn:${AWS::Partition}:iam::*:role/${pAWSControlTowerExecutionRoleName}
                   - !Sub arn:${AWS::Partition}:iam::*:role/stacksets-exec-*
+                  - !Sub arn:${AWS::Partition}:iam::*:role/sra-batch*
                   - !Sub arn:${AWS::Partition}:iam::*:role/sra-execution
+                  - !Sub arn:${AWS::Partition}:iam::*:role/sra-aws-ctautomation-github-actions-role
+
+          - Sid: AllowGitHubActionsRolePutObjectTerraformStates
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:GetObject
+              - s3:DeleteObject
+            Principal:
+              AWS: "*"
+            Resource: !Sub arn:${AWS::Partition}:s3:::${rSRAStagingS3Bucket}/sra-terraform-states/*
+            Condition:
+              ArnLike:
+                aws:PrincipalArn:
+                  - !Sub arn:${AWS::Partition}:iam::*:role/sra-aws-ctautomation-github-actions-role
 
           - Sid: DenyExternalPrincipals
             Effect: Deny
